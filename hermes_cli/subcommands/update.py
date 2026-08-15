@@ -62,6 +62,16 @@ def build_update_parser(subparsers, *, cmd_update: Callable) -> None:
         ),
     )
     update_parser.add_argument(
+        "--preserve-local-commits",
+        action="store_true",
+        default=False,
+        help=(
+            "Abort when local and remote history diverge instead of resetting "
+            "the checkout to origin/<branch>. Without this flag, the existing "
+            "reset fallback remains unchanged."
+        ),
+    )
+    update_parser.add_argument(
         "--force",
         action="store_true",
         default=False,

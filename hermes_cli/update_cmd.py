@@ -4827,6 +4827,19 @@ def _cmd_update_impl(args, gateway_mode: bool):
                 text=True, encoding="utf-8", errors="replace",
             )
             if pull_result.returncode != 0:
+                if getattr(args, "preserve_local_commits", False):
+                    print(
+                        "✗ Fast-forward not possible; --preserve-local-commits "
+                        "blocked the destructive reset."
+                    )
+                    print(
+                        "  No reset was performed; HEAD and local commits are unchanged."
+                    )
+                    print(
+                        "  Inspect the divergence with: "
+                        f"git log --oneline --left-right HEAD...origin/{branch}"
+                    )
+                    sys.exit(1)
                 # ff-only failed — local and remote have diverged (e.g. upstream
                 # force-pushed or rebase).  Since local changes are already
                 # stashed, reset to match the remote exactly.

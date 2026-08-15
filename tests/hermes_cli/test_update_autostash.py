@@ -193,6 +193,25 @@ def test_cmd_update_skips_stash_restore_when_reset_fails(monkeypatch, tmp_path, 
     assert "preserved in stash" in out
 
 
+def test_cmd_update_preserve_local_commits_aborts_before_reset(
+    monkeypatch, tmp_path, capsys
+):
+    _setup_update_mocks(monkeypatch, tmp_path)
+    side_effect, recorded = _make_update_side_effect(ff_only_fails=True)
+    monkeypatch.setattr(hermes_main.subprocess, "run", side_effect)
+
+    with pytest.raises(SystemExit, match="1"):
+        hermes_main.cmd_update(SimpleNamespace(preserve_local_commits=True))
+
+    commands = [" ".join(str(part) for part in command) for command in recorded]
+    assert any("merge --ff-only origin/main" in command for command in commands)
+    assert not any("reset --hard" in command for command in commands)
+
+    out = capsys.readouterr().out
+    assert "--preserve-local-commits" in out
+    assert "No reset was performed" in out
+
+
 # ---------------------------------------------------------------------------
 # Non-interactive update.non_interactive_local_changes setting
 # (chat app / gateway): "discard" throws stashed changes away, "stash"

@@ -1,5 +1,6 @@
 """Tests for cmd_update — branch fallback when remote branch doesn't exist."""
 
+import argparse
 import hashlib
 import subprocess
 from types import SimpleNamespace
@@ -8,6 +9,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from hermes_cli.main import cmd_update, PROJECT_ROOT
+from hermes_cli.subcommands.update import build_update_parser
 
 
 def _make_run_side_effect(branch="main", verify_ok=True, commit_count="0"):
@@ -33,6 +35,18 @@ def _make_run_side_effect(branch="main", verify_ok=True, commit_count="0"):
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
     return side_effect
+
+
+def test_update_parser_defaults_to_destructive_divergence_recovery():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command")
+    build_update_parser(subparsers, cmd_update=lambda _args: None)
+
+    default_args = parser.parse_args(["update"])
+    protected_args = parser.parse_args(["update", "--preserve-local-commits"])
+
+    assert default_args.preserve_local_commits is False
+    assert protected_args.preserve_local_commits is True
 
 
 @pytest.fixture
